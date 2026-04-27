@@ -11,7 +11,7 @@
 
 An interactive, fully browser-based sales dashboard built for the **Chinook digital music store** dataset. This project visualises key business metrics across revenue, customers, genres, and employee performance — designed to simulate what a real Data Analyst would present to business stakeholders.
 
-No backend required. Open the HTML file directly in any browser.
+**Live Demo:** [View Dashboard](#) ← replace # with your Pages URL
 
 ---
 
