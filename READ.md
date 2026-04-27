@@ -1,6 +1,6 @@
 # 📊 Chinook Sales Dashboard
 
-**Live Demo:**  
+**Live Demo:** [View Dashboard](https://renno2683.github.io/Chinook-Sales-Dashboard/chinook_dashboard.html)
 **Tools:** HTML · CSS · JavaScript · Chart.js  
 **Dataset:** Chinook Sample Database  
 **Author:** Ranim
@@ -16,8 +16,7 @@ An interactive, fully browser-based sales dashboard built for the **Chinook digi
 ---
 
 ## 📸 Dashboard Preview
-
-https://renno2683.github.io/Chinook-Sales-Dashboard/chinook_dashboard.html
+   [👉 Click here to view the live dashboard](https://renno2683.github.io/Chinook-Sales-Dashboard/chinook_dashboard.html)
 ---
 
 ## 📈 What the Dashboard Shows
