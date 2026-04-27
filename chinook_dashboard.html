@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chinook Sales Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #060b14;
+    --surface: #0d1726;
+    --surface2: #111f33;
+    --border: #1a2d47;
+    --teal: #00d4aa;
+    --gold: #f5a623;
+    --coral: #ff6b6b;
+    --blue: #4a9eff;
+    --text: #e8f0fe;
+    --muted: #6b8cae;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'Lato', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-family: var(--font-display);
+    font-size: 52px;
+    letter-spacing: 3px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .header-left h1 span {
+    color: var(--teal);
+  }
+
+  .header-left p {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--teal);
+    background: rgba(0, 212, 170, 0.08);
+    border: 1px solid rgba(0, 212, 170, 0.25);
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .badge.gold {
+    color: var(--gold);
+    background: rgba(245, 166, 35, 0.08);
+    border-color: rgba(245, 166, 35, 0.25);
+  }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+    cursor: default;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .kpi-card:nth-child(1)::before { background: var(--teal); }
+  .kpi-card:nth-child(2)::before { background: var(--gold); }
+  .kpi-card:nth-child(3)::before { background: var(--blue); }
+  .kpi-card:nth-child(4)::before { background: var(--coral); }
+
+  .kpi-card:hover {
+    border-color: rgba(0, 212, 170, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 42px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .kpi-card:nth-child(1) .kpi-value { color: var(--teal); }
+  .kpi-card:nth-child(2) .kpi-value { color: var(--gold); }
+  .kpi-card:nth-child(3) .kpi-value { color: var(--blue); }
+  .kpi-card:nth-child(4) .kpi-value { color: var(--coral); }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-family: var(--font-mono);
+  }
+
+  .kpi-icon {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    font-size: 36px;
+    opacity: 0.07;
+  }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .card-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .card-heading {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .chart-container {
+    position: relative;
+    width: 100%;
+  }
+
+  /* CUSTOMER TABLE */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(26, 45, 71, 0.5);
+    transition: background 0.2s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 11px 12px;
+    color: var(--text);
+  }
+
+  .rank {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    width: 28px;
+  }
+
+  .spend-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .spend-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .spend-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--teal), var(--blue));
+  }
+
+  .spend-val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--teal);
+    min-width: 52px;
+    text-align: right;
+  }
+
+  /* EMPLOYEE SECTION */
+  .emp-list { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+
+  .emp-row { display: flex; align-items: center; gap: 14px; }
+
+  .emp-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .emp-info { flex: 1; }
+  .emp-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .emp-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .emp-fill { height: 100%; border-radius: 3px; }
+
+  .emp-revenue {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    border-top: 1px solid var(--border);
+    margin-top: 24px;
+  }
+
+  footer a { color: var(--teal); text-decoration: none; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .kpi-card { animation: fadeUp 0.5s ease forwards; }
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+  .card { animation: fadeUp 0.5s ease 0.2s forwards; opacity: 0; }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid, .chart-grid-2 { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header-left h1 { font-size: 38px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <h1>CHINOOK <span>SALES</span></h1>
+      <p>Digital Music Store · Data Analysis Portfolio · Python &amp; SQL</p>
+    </div>
+    <div class="header-right">
+      <span class="badge">DATASET: CHINOOK DB</span>
+      <span class="badge gold">AUTHOR: RANIM</span>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value">$2,329</div>
+      <div class="kpi-sub">Across all years</div>
+      <div class="kpi-icon">💰</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value">412</div>
+      <div class="kpi-sub">Invoices processed</div>
+      <div class="kpi-icon">🧾</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Customers</div>
+      <div class="kpi-value">59</div>
+      <div class="kpi-sub">Unique buyers</div>
+      <div class="kpi-icon">👤</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value">$5.65</div>
+      <div class="kpi-sub">Per invoice</div>
+      <div class="kpi-icon">📊</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Revenue Trend + Genre Donut -->
+  <div class="chart-grid">
+    <div class="card">
+      <div class="card-title">Revenue Over Time</div>
+      <div class="card-heading">Monthly Sales Trend</div>
+      <div class="chart-container" style="height:240px">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">By Category</div>
+      <div class="card-heading">Top Genres</div>
+      <div class="chart-container" style="height:240px">
+        <canvas id="genreChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Countries Bar + Top Customers Table -->
+  <div class="chart-grid-2">
+    <div class="card">
+      <div class="card-title">Geographic Breakdown</div>
+      <div class="card-heading">Revenue by Country</div>
+      <div class="chart-container" style="height:240px">
+        <canvas id="countryChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Spenders</div>
+      <div class="card-heading">Best Customers</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer</th>
+              <th>Country</th>
+              <th>Total Spent</th>
+            </tr>
+          </thead>
+          <tbody id="customerTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Employee Performance -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Team Performance</div>
+    <div class="card-heading">Sales Agent Revenue</div>
+    <div class="emp-list" id="empList"></div>
+  </div>
+
+  <footer>
+    CHINOOK DATA ANALYSIS PORTFOLIO &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/ranim-c-07571836a" target="_blank">LINKEDIN</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/Renno2683" target="_blank">GITHUB</a>
+    &nbsp;·&nbsp; DATA SOURCE: CHINOOK SAMPLE DATABASE
+  </footer>
+
+</div>
+
+<script>
+  // ─── DATA ───────────────────────────────────────────────────
+  const months = ['Jan 09','Mar 09','May 09','Jul 09','Sep 09','Nov 09',
+                  'Jan 10','Mar 10','May 10','Jul 10','Sep 10','Nov 10',
+                  'Jan 11','Mar 11','May 11','Jul 11','Sep 11','Nov 11',
+                  'Jan 12','Mar 12','May 12','Jul 12','Sep 12','Nov 12',
+                  'Jan 13','Mar 13','May 13','Jul 13','Sep 13','Nov 13'];
+
+  const revenues = [37.62,37.62,35.64,37.62,37.62,35.64,
+                    37.62,37.62,35.64,37.62,37.62,35.64,
+                    37.62,37.62,35.64,37.62,37.62,35.64,
+                    37.62,37.62,35.64,37.62,37.62,35.64,
+                    37.62,37.62,35.64,37.62,37.62,35.64];
+
+  const genres = ['Rock','Latin','Metal','Alt & Punk','Jazz','Blues','Classical','Reggae'];
+  const genreCounts = [835, 386, 264, 244, 80, 61, 41, 30];
+
+  const countries = ['USA','Canada','France','Brazil','Germany','Czech Republic','UK','Portugal'];
+  const countryRevenue = [523.06, 303.96, 195.10, 190.10, 156.48, 144.90, 112.86, 92.94];
+
+  const customers = [
+    { name: 'Helena Holý',        country: '🇨🇿 Czech Republic', spend: 49.62 },
+    { name: 'Richard Cunningham', country: '🇺🇸 USA',            spend: 47.62 },
+    { name: 'Luis Rojas',         country: '🇨🇱 Chile',          spend: 46.62 },
+    { name: 'Ladislav Kovář',     country: '🇨🇿 Czech Republic', spend: 45.62 },
+    { name: 'Hugh O\'Reilly',     country: '🇮🇪 Ireland',        spend: 45.62 },
+  ];
+
+  const employees = [
+    { name: 'Jane Peacock',    revenue: 833.04, color: '#00d4aa' },
+    { name: 'Margaret Park',   revenue: 775.40, color: '#4a9eff' },
+    { name: 'Steve Johnson',   revenue: 720.16, color: '#f5a623' },
+  ];
+
+  // ─── CHART DEFAULTS ─────────────────────────────────────────
+  Chart.defaults.color = '#6b8cae';
+  Chart.defaults.font.family = "'DM Mono', monospace";
+  Chart.defaults.font.size = 11;
+
+  // ─── TREND CHART ────────────────────────────────────────────
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Monthly Revenue ($)',
+        data: revenues,
+        borderColor: '#00d4aa',
+        backgroundColor: 'rgba(0,212,170,0.08)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#00d4aa',
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#0d1726',
+        borderColor: '#1a2d47',
+        borderWidth: 1,
+        callbacks: { label: ctx => ` $${ctx.raw.toFixed(2)}` }
+      }},
+      scales: {
+        x: { grid: { color: 'rgba(26,45,71,0.5)' }, ticks: { maxTicksLimit: 8 } },
+        y: { grid: { color: 'rgba(26,45,71,0.5)' },
+             ticks: { callback: v => '$' + v } }
+      }
+    }
+  });
+
+  // ─── GENRE DONUT ────────────────────────────────────────────
+  new Chart(document.getElementById('genreChart'), {
+    type: 'doughnut',
+    data: {
+      labels: genres,
+      datasets: [{
+        data: genreCounts,
+        backgroundColor: ['#00d4aa','#4a9eff','#f5a623','#ff6b6b','#a78bfa','#34d399','#fb923c','#60a5fa'],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { boxWidth: 10, padding: 10, font: { size: 10 } }
+        },
+        tooltip: {
+          backgroundColor: '#0d1726',
+          borderColor: '#1a2d47',
+          borderWidth: 1,
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} purchases` }
+        }
+      }
+    }
+  });
+
+  // ─── COUNTRY BAR ────────────────────────────────────────────
+  new Chart(document.getElementById('countryChart'), {
+    type: 'bar',
+    data: {
+      labels: countries,
+      datasets: [{
+        label: 'Revenue ($)',
+        data: countryRevenue,
+        backgroundColor: countries.map((_, i) =>
+          i === 0 ? '#00d4aa' : 'rgba(74,158,255,0.5)'),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d1726',
+          borderColor: '#1a2d47',
+          borderWidth: 1,
+          callbacks: { label: ctx => ` $${ctx.raw.toFixed(2)}` }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(26,45,71,0.5)' },
+             ticks: { callback: v => '$' + v } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ─── CUSTOMER TABLE ──────────────────────────────────────────
+  const maxSpend = Math.max(...customers.map(c => c.spend));
+  const tbody = document.getElementById('customerTable');
+  customers.forEach((c, i) => {
+    const pct = (c.spend / maxSpend * 100).toFixed(1);
+    tbody.innerHTML += `
+      <tr>
+        <td class="rank">${String(i+1).padStart(2,'0')}</td>
+        <td>${c.name}</td>
+        <td style="font-size:12px;color:var(--muted)">${c.country}</td>
+        <td>
+          <div class="spend-bar">
+            <div class="spend-track"><div class="spend-fill" style="width:${pct}%"></div></div>
+            <div class="spend-val">$${c.spend.toFixed(2)}</div>
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  // ─── EMPLOYEE LIST ───────────────────────────────────────────
+  const maxRev = Math.max(...employees.map(e => e.revenue));
+  const initials = n => n.split(' ').map(w => w[0]).join('');
+  const empList = document.getElementById('empList');
+  employees.forEach(e => {
+    const pct = (e.revenue / maxRev * 100).toFixed(1);
+    empList.innerHTML += `
+      <div class="emp-row">
+        <div class="emp-avatar" style="background:${e.color}22;color:${e.color}">${initials(e.name)}</div>
+        <div class="emp-info">
+          <div class="emp-name">${e.name}</div>
+          <div class="emp-track">
+            <div class="emp-fill" style="width:${pct}%;background:${e.color}"></div>
+          </div>
+        </div>
+        <div class="emp-revenue" style="color:${e.color}">$${e.revenue.toFixed(2)}</div>
+      </div>`;
+  });
+</script>
+</body>
+</html>
