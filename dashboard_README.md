@@ -17,7 +17,7 @@ An interactive, fully browser-based sales dashboard built for the **Chinook digi
 
 ## 📸 Dashboard Preview
 
-file:///C:/Users/ranim/Downloads/chinook_dashboard.html
+
 ---
 
 ## 📈 What the Dashboard Shows
